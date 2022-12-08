@@ -1,0 +1,48 @@
+{
+  "name": "koishi-plugin-text-censor",
+  "description": "A text censor provider for Koishi",
+  "version": "1.0.1",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "author": "Shigma <shigma10826@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koishijs/censor.git",
+    "directory": "packages/text"
+  },
+  "bugs": {
+    "url": "https://github.com/koishijs/censor/issues"
+  },
+  "homepage": "https://censor.koishi.chat/plugins/text.html",
+  "keywords": [
+    "bot",
+    "chatbot",
+    "koishi",
+    "plugin",
+    "censor",
+    "filter",
+    "security",
+    "text"
+  ],
+  "koishi": {
+    "category": "censor",
+    "description": {
+      "en": "Filter out sensitive words in text messages",
+      "zh": "文本敏感词过滤"
+    }
+  },
+  "peerDependencies": {
+    "koishi": "^4.10.3"
+  },
+  "devDependencies": {
+    "koishi": "^4.10.5"
+  },
+  "dependencies": {
+    "@koishijs/censor": "^1.0.0",
+    "mint-filter": "^3.0.1"
+  }
+}
