@@ -3,7 +3,7 @@ import { defineConfig } from '@koishijs/vitepress'
 export default defineConfig({
   lang: 'zh-CN',
   title: '@koishijs/censor',
-  description: '在 Koishi 中过滤敏感内容',
+  description: 'Koishi 内容审查服务',
 
   head: [
     ['link', { rel: 'icon', href: 'https://koishi.chat/logo.png' }],
