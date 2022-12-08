@@ -13,7 +13,7 @@ export interface Config {
 }
 
 export const Config: Schema<Config> = Schema.object({
-  filename: Schema.string().description('本地词库路径。').default('data/censor.txt'),
+  filename: Schema.string().description('存储敏感词的文件路径。').default('data/censor.txt'),
 })
 
 export function apply(ctx: Context, config: Config) {

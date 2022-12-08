@@ -16,11 +16,14 @@ class Censor extends Service {
     })
   }
 
-  async transform(children: h[]) {
+  async transform(source: string): Promise<string>
+  async transform(source: h[]): Promise<h[]>
+  async transform(source: string | h[]) {
+    let elements = typeof source === "string" ? h.parse(source) : source
     for (const interceptor of this.interceptors) {
-      children = await h.transformAsync(children, interceptor)
+      elements = await h.transformAsync(elements, interceptor)
     }
-    return children
+    return typeof source === "string" ? elements.join('') : elements
   }
 
   intercept(rules: Dict<Component>) {
