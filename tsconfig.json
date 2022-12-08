@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@koishijs/censor": ["packages/core/src"],
+      "koishi-plugin-censor-*": ["packages/*/src"],
+    },
+  },
+}
