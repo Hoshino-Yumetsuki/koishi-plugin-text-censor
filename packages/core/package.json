@@ -16,7 +16,7 @@
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/koishijs/koishi-plugin-censor/issues"
+    "url": "https://github.com/koishijs/censor/issues"
   },
   "homepage": "https://censor.koishi.chat",
   "keywords": [
@@ -31,6 +31,6 @@
     "koishi": "^4.10.1"
   },
   "devDependencies": {
-    "koishi": "^4.10.5"
+    "koishi": "^4.11.2"
   }
 }
