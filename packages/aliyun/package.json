@@ -8,6 +8,10 @@
     "lib"
   ],
   "author": "LittleC <i@ltlec.com>",
+  "contributors": [
+    "LittleC <i@ltlec.com>",
+    "Shigma <shigma10826@gmail.com>"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -30,6 +34,11 @@
   ],
   "koishi": {
     "category": "censor",
+    "service": {
+      "optional": [
+        "assets"
+      ]
+    },
     "description": {
       "en": "Filter out sensitive content in images and text via aliyun API",
       "zh": "图文敏感内容过滤"
