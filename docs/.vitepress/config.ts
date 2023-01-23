@@ -21,6 +21,7 @@ export default defineConfig({
     }, {
       text: '插件',
       items: [
+        { text: 'Aliyun', link: './plugins/aliyun' },
         { text: 'Text', link: './plugins/text' },
       ],
     }, {

@@ -16,4 +16,5 @@
 
 以下是提供此服务的插件：
 
+- [koishi-plugin-aliyun-censor](./plugins/aliyun.md)
 - [koishi-plugin-text-censor](./plugins/text.md)
