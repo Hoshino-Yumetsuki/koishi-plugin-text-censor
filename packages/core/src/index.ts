@@ -1,4 +1,4 @@
-import { Component, Context, Dict, h, Service } from 'koishi'
+import { Component, Context, Dict, h, Service, Session } from 'koishi'
 
 declare module 'koishi' {
   interface Context {
@@ -7,27 +7,28 @@ declare module 'koishi' {
 }
 
 class Censor extends Service {
-  private interceptors = new Set<Dict<Component>>()
+  private interceptors = new Map<Dict<Component>, Context>()
 
   constructor(ctx: Context) {
     super(ctx, 'censor', true)
     ctx.component('censor', async (attrs, children, session) => {
-      return this.transform(children)
+      return this.transform(children, session)
     })
   }
 
-  async transform(source: string): Promise<string>
-  async transform(source: h[]): Promise<h[]>
-  async transform(source: string | h[]) {
+  async transform(source: string, session: Session): Promise<string>
+  async transform(source: h[], session: Session): Promise<h[]>
+  async transform(source: string | h[], session: Session) {
     let elements = typeof source === "string" ? h.parse(source) : source
-    for (const interceptor of this.interceptors) {
+    for (const [interceptor, context] of this.interceptors) {
+      if (session && !context.filter(session)) continue
       elements = await h.transformAsync(elements, interceptor)
     }
     return typeof source === "string" ? elements.join('') : elements
   }
 
   intercept(rules: Dict<Component>) {
-    this.interceptors.add(rules)
+    this.interceptors.set(rules, this.caller)
     return this.caller.collect('censor', () => this.interceptors.delete(rules))
   }
 }
