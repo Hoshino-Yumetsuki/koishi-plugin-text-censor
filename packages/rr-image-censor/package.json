@@ -1,0 +1,41 @@
+{
+  "name": "koishi-plugin-rr-image-censor",
+  "description": "人人计划，图像审核服务。",
+  "version": "2.0.1",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "homepage": "https://forum.koishi.xyz/t/topic/117",
+  "author": "42 <mirrorcy@vip.qq.com>",
+  "contributors": [
+    "42 <mirrorcy@vip.qq.com>"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "atsc -b"
+  },
+  "koishi": {
+    "description": {
+      "zh": "人人计划，图像审核服务。"
+    },
+    "service": {
+      "implements": [
+        "censor"
+      ]
+    }
+  },
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin"
+  ],
+  "peerDependencies": {
+    "koishi": "^4.11.0"
+  },
+  "dependencies": {
+    "@koishijs/censor": "^1.0.1"
+  }
+}
