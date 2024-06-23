@@ -1,10 +1,8 @@
-import { Context, Logger, Schema } from 'koishi'
-import { existsSync, readFileSync } from 'fs'
-import { resolve } from 'path'
+import { Context, Schema } from 'koishi'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import Censor from '@koishijs/censor'
 import Mint from 'mint-filter'
-
-const logger = new Logger('text-censor')
 
 export const name = 'text-censor'
 
@@ -19,7 +17,7 @@ export const Config: Schema<Config> = Schema.object({
 export function apply(ctx: Context, config: Config) {
   const filename = resolve(ctx.baseDir, config.filename)
   if (!existsSync(filename)) {
-    logger.warn('dictionary file not found')
+    ctx.logger.warn('dictionary file not found')
     return
   }
 
@@ -31,7 +29,7 @@ export function apply(ctx: Context, config: Config) {
   const filter = new Mint(words, { transform: 'capital' })
 
   ctx.plugin(Censor)
-  ctx.censor.intercept({
+  ctx.get('censor').intercept({
     async text(attrs) {
       const result = await filter.filter(attrs.content)
       if (typeof result.text !== 'string') return []

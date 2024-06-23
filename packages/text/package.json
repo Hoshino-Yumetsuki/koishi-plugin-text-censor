@@ -29,17 +29,21 @@
     "text"
   ],
   "koishi": {
-    "category": "censor",
+    "service": {
+      "implements": [
+        "censor"
+      ]
+    },
     "description": {
       "en": "Filter out sensitive words in text messages",
       "zh": "文本敏感词过滤"
     }
   },
   "peerDependencies": {
-    "koishi": "^4.10.3"
+    "koishi": "^4.17.9"
   },
   "devDependencies": {
-    "koishi": "^4.11.2"
+    "koishi": "^4.17.9"
   },
   "dependencies": {
     "@koishijs/censor": "^1.0.1",

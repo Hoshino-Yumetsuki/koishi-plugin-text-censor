@@ -1,7 +1,9 @@
-import { Context, Schema, Element } from 'koishi'
-import { createHmac } from 'crypto'
+import { Context, Schema, Element, Dict } from 'koishi'
+import { createHmac } from 'node:crypto'
 import type { } from '@koishijs/assets'
 import Censor from '@koishijs/censor'
+
+export const name = 'aliyun-censor'
 
 export interface Config {
   accessKeyId: string
@@ -25,7 +27,10 @@ function encode(str: string) {
     .replace(/\*/g, '%2A');
 }
 
-// export const using = ['assets'] as const
+export const inject = {
+  required: ['http'],
+  optional: ['assets']
+}
 
 export async function apply(ctx: Context, config: Config) {
   ctx.plugin(Censor)
@@ -38,7 +43,7 @@ export async function apply(ctx: Context, config: Config) {
     return normalized.map((i) => `${i[0]}=${i[1]}`).join('&');
   }
 
-  async function request(action: string, params) {
+  function request(action: string, params: Dict) {
     const date = new Date().toISOString()
 
     params = {
@@ -48,40 +53,41 @@ export async function apply(ctx: Context, config: Config) {
       SignatureVersion: '1.0',
       Timestamp: date,
       AccessKeyId: config.accessKeyId,
-      Version: "2022-03-02",
+      Version: '2022-03-02',
       Action: action,
       ...params
-    };
-    let normalized = normalize(params);
-    const canonicalized = canonicalize(normalized);
-    const stringToSign = `POST&${encode('/')}&${encode(canonicalized)}`;
-    const key = config.accessKeySecret + '&';
+    }
+    let normalized = normalize(params)
+    const canonicalized = canonicalize(normalized)
+    const stringToSign = `POST&${encode('/')}&${encode(canonicalized)}`
+    const key = config.accessKeySecret + '&'
     const sha1 = createHmac('sha1', key)
     const signStr = sha1.update(stringToSign, 'utf8').digest('base64')
-    normalized.push(['Signature', encode(signStr)]);
+    normalized.push(['Signature', encode(signStr)])
 
     return ctx.http.post(config.endpoint, canonicalize(normalized), {
       headers: {
         'x-acs-action': action,
-        'x-acs-version': "2022-03-02"
+        'x-acs-version': '2022-03-02',
+        'content-type': 'application/x-www-form-urlencoded'
       }
     })
   }
 
-  ctx.censor.intercept({
+  ctx.get('censor').intercept({
     async text(attrs) {
-      let r = await request('TextModeration', { "Service": "chat_detection", ServiceParameters: JSON.stringify({ content: attrs.content }) })
+      let r = await request('TextModeration', { Service: 'chat_detection', ServiceParameters: JSON.stringify({ content: attrs.content }) })
       if (!r.Data.labels) return attrs.content
-      let riskWords = JSON.parse(r.Data.reason).riskWords.split(",")
+      let riskWords = JSON.parse(r.Data.reason).riskWords.split(',')
       return attrs.content.replace(new RegExp(riskWords.join('|'), 'g'), (v) => '*'.repeat(v.length))
     },
-    async image(attrs) {
-      if (!ctx.assets && !attrs.url.startsWith("http")) {
-        return Element('image', attrs)
+    async img(attrs) {
+      if (!ctx.assets && !attrs.src.startsWith('http')) {
+        return Element('img', attrs)
       }
-      let url = (!attrs.url.startsWith("http") && ctx.assets) ? await ctx.assets.upload(attrs.url, '') : attrs.url
-      let r = await request('ImageModeration', { "Service": "baselineCheck", ServiceParameters: JSON.stringify({ imageUrl: url }) })
-      if (r.Data.Result[0].Label.startsWith("nonLabel")) return Element('image', attrs)
+      let url = (!attrs.src.startsWith('http') && ctx.assets) ? await ctx.assets.upload(attrs.src, '') : attrs.src
+      let r = await request('ImageModeration', { Service: 'baselineCheck', ServiceParameters: JSON.stringify({ imageUrl: url }) })
+      if (r.Data.Result[0].Label.startsWith('nonLabel')) return Element('img', attrs)
       return ''
     }
   })

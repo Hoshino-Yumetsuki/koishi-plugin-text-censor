@@ -28,8 +28,8 @@ class Censor extends Service {
   }
 
   intercept(rules: Dict<Component>) {
-    this.interceptors.set(rules, this.caller)
-    return this.caller.collect('censor', () => this.interceptors.delete(rules))
+    this.interceptors.set(rules, this.ctx)
+    return this.ctx.collect('censor', () => this.interceptors.delete(rules))
   }
 }
 
