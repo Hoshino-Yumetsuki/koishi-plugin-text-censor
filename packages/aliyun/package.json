@@ -33,10 +33,12 @@
     "aliyun"
   ],
   "koishi": {
-    "category": "censor",
     "service": {
       "optional": [
         "assets"
+      ],
+      "implements": [
+        "censor"
       ]
     },
     "description": {
@@ -45,10 +47,11 @@
     }
   },
   "peerDependencies": {
-    "koishi": "^4.10.3"
+    "koishi": "^4.17.9"
   },
   "devDependencies": {
-    "koishi": "^4.11.2"
+    "koishi": "^4.17.9",
+    "@koishijs/assets": "^1.1.2"
   },
   "dependencies": {
     "@koishijs/censor": "^1.0.1"
