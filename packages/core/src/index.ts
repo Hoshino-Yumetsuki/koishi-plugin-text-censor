@@ -1,4 +1,3 @@
-
 import { Context, Schema } from 'koishi'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -44,22 +43,30 @@ export function apply(ctx: Context, config: Config) {
   ctx.plugin(Censor)
   ctx.get('censor').intercept({
     async text(attrs) {
-      const result = await filter.filter(attrs.content)
+      const originalText = attrs.content; // 获取原始文本
+      const result = await filter.filter(originalText); // 处理文本以过滤敏感词
 
       if (typeof result.text !== 'string') return []
 
-      // 根据配置决定是删除敏感词还是进行其他处理
+      // 如果需要移除敏感词，进行上下文比较
       if (config.removeWords) {
-        // 如果设置为删除敏感词，将敏感词替换为空字符串
-        const filteredText = words.reduce((text, word) => {
-          const regex = new RegExp(`\\b${word}\\b`, 'gi') // 使用正则匹配敏感词
-          return text.replace(regex, '') // 将敏感词替换为空字符串
-        }, result.text)
+        // 获取过滤后的文本
+        const filteredText = result.text;
 
-        return [filteredText.trim()] // 返回删除敏感词后的文本
+        // 找出原始文本中被过滤掉的字符
+        const removedCharacters = Array.from(originalText).filter((char, index) => 
+          filteredText[index] !== char // 如果对应位置的字符不相同，则为被过滤的字符
+        ).join('');
+
+        // 将被过滤的字符从原始文本中移除
+        const cleanedText = originalText.split('').filter(char => 
+          !removedCharacters.includes(char) // 过滤掉被移除的字符
+        ).join('');
+
+        return [cleanedText.trim()]; // 返回经过清理后的文本
       } else {
         // 不删除敏感词，只返回处理后的文本
-        return [result.text]
+        return [result.text];
       }
     },
   })
