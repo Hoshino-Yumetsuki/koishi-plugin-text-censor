@@ -2,14 +2,14 @@ import { Context, Schema } from 'koishi'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import Censor from '@koishijs/censor'
-import Mint from 'mint-filter'
+import Mint, { OptionsType } from 'mint-filter'
 
 export const name = 'text-censor'
 
 export interface Config {
   filename: string
   removeWords: boolean // 是否直接删除敏感词
-  transformToUpper: boolean // 新增配置项，决定是否将字符转换为大写
+  transformToUpper: boolean // 是否将字符转换为大写
 }
 
 export const Config: Schema<Config> = Schema.object({
@@ -32,7 +32,9 @@ export function apply(ctx: Context, config: Config) {
     .filter(word => word && !word.startsWith('//') && !word.startsWith('#'))
 
   // 根据配置决定是否转换为大写
-  const mintOptions = config.transformToUpper ? { transform: 'capital' } : {}
+  const mintOptions: OptionsType = {
+    transform: config.transformToUpper ? 'capital' : 'none', // 指定为 'none' 而不是 undefined
+  }
 
   // 创建敏感词过滤器
   const filter = new Mint(words, mintOptions)
