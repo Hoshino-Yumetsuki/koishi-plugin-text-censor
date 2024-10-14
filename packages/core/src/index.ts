@@ -1,6 +1,6 @@
 import { Context, Schema } from 'koishi'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import Mint from 'mint-filter'
 import Censor from '@koishijs/censor'
 
@@ -25,27 +25,31 @@ export const Config: Schema<Config> = Schema.intersect([
     Schema.object({
         removeWords: Schema.boolean()
             .description('是否直接删除敏感词。')
-            .default(false), // 默认不删除敏感词
+            .default(false),
         transformToUpper: Schema.boolean()
             .description('是否将字符转换为大写。')
-            .default(false) // 默认不转换字符为大写
+            .default(false)
     })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ]) as any
 
 export function apply(ctx: Context, config: Config) {
-    // 存储所有的敏感词
     let words: string[] = []
 
-    // 遍历所有的文件名
     for (const [file] of config.textDatabase) {
         const filePath = resolve(ctx.baseDir, file)
 
-        // 如果文件不存在，自动创建一个空文件
+        // 如果文件不存在，确保目录存在，然后创建文件
         if (!existsSync(filePath)) {
             ctx.logger.warn(
                 `dictionary file not found: ${filePath}, creating a new one.`
             )
+
+            const dirPath = dirname(filePath)
+            if (!existsSync(dirPath)) {
+                mkdirSync(dirPath, { recursive: true }) // 递归创建目录
+            }
+
             writeFileSync(filePath, '') // 创建一个空文件
         }
 
@@ -58,7 +62,6 @@ export function apply(ctx: Context, config: Config) {
                     word && !word.startsWith('//') && !word.startsWith('#')
             )
 
-        // 合并当前文件的敏感词到总的词库中
         words = words.concat(fileWords)
     }
 
@@ -67,30 +70,24 @@ export function apply(ctx: Context, config: Config) {
         return
     }
 
-    // 根据配置决定是否转换为大写
     const mintOptions = {
-        transform: config.transformToUpper ? 'capital' : 'none' // 这里我们将值设置为可能的类型
+        transform: config.transformToUpper ? 'capital' : 'none'
     } as const
 
-    // 创建敏感词过滤器
     const filter = new Mint(words, mintOptions)
 
-    // 注册 Censor 插件
     ctx.plugin(Censor)
     ctx.get('censor').intercept({
         async text(attrs) {
-            const originalText = attrs.content // 获取原始文本
-            const result = await filter.filter(originalText) // 处理文本以过滤敏感词
+            const originalText = attrs.content
+            const result = await filter.filter(originalText)
 
             if (typeof result.text !== 'string') return []
 
-            // 如果需要移除敏感词，进行处理
             if (config.removeWords) {
-                // 获取过滤后的文本，移除所有 '*' 号
-                const cleanedText = result.text.replace(/\*/g, '') // 删除所有 '*' 号
-                return [cleanedText.trim()] // 返回经过清理后的文本
+                const cleanedText = result.text.replace(/\*/g, '')
+                return [cleanedText.trim()]
             } else {
-                // 不删除敏感词，只返回处理后的文本
                 return [result.text]
             }
         }
