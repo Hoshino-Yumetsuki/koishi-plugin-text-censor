@@ -7,7 +7,7 @@ import Censor from '@koishijs/censor'
 export const name = 'text-censor'
 
 export interface Config {
-    textDatabase: [string, string][]
+    textDatabase: [string][]
     removeWords: boolean // 是否直接删除敏感词
     transformToUpper: boolean // 是否将字符转换为大写
 }
@@ -39,7 +39,7 @@ export function apply(ctx: Context, config: Config) {
     let words: string[] = []
 
     // 遍历所有的文件名
-    for (const [_, file] of config.textDatabase) {
+    for (const [file] of config.textDatabase) {
         const filePath = resolve(ctx.baseDir, file)
 
         // 如果文件不存在，自动创建一个空文件
