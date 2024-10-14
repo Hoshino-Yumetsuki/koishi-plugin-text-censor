@@ -7,15 +7,14 @@
   "files": [
     "lib"
   ],
-  "author": "Shigma <shigma10826@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/koishijs/censor.git",
+    "url": "git+https://github.com/Hoshino-Yumetsuki/koishi-plugin-text-censor.git",
     "directory": "packages/text"
   },
   "bugs": {
-    "url": "https://github.com/koishijs/censor/issues"
+    "url": "https://github.com/Hoshino-Yumetsuki/koishi-plugin-text-censor/issues"
   },
   "homepage": "https://censor.koishi.chat/plugins/text.html",
   "keywords": [
