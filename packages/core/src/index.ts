@@ -16,7 +16,6 @@ export const Config: Schema<Config> = Schema.intersect([
     Schema.object({
         textDatabase: Schema.array(
             Schema.tuple([
-                Schema.string().role('text'),
                 Schema.string().default('data/text-censor/censor.txt')
             ])
         )
