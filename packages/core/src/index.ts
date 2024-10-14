@@ -48,21 +48,10 @@ export function apply(ctx: Context, config: Config) {
 
       if (typeof result.text !== 'string') return []
 
-      // 如果需要移除敏感词，进行上下文比较
+      // 如果需要移除敏感词，进行处理
       if (config.removeWords) {
-        // 获取过滤后的文本
-        const filteredText = result.text;
-
-        // 找出原始文本中被过滤掉的字符
-        const removedCharacters = Array.from(originalText).filter((char, index) => 
-          filteredText[index] !== char // 如果对应位置的字符不相同，则为被过滤的字符
-        ).join('');
-
-        // 将被过滤的字符从原始文本中移除
-        const cleanedText = originalText.split('').filter(char => 
-          !removedCharacters.includes(char) // 过滤掉被移除的字符
-        ).join('');
-
+        // 获取过滤后的文本，移除所有 '*' 号
+        const cleanedText = result.text.replace(/\*/g, ''); // 删除所有 '*' 号
         return [cleanedText.trim()]; // 返回经过清理后的文本
       } else {
         // 不删除敏感词，只返回处理后的文本
