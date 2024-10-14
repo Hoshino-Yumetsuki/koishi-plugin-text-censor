@@ -1,5 +1,5 @@
 import { Context, Schema } from 'koishi'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import Mint from 'mint-filter'
 import Censor from '@koishijs/censor'
@@ -41,9 +41,13 @@ export function apply(ctx: Context, config: Config) {
     // 遍历所有的文件名
     for (const [_, file] of config.textDatabase) {
         const filePath = resolve(ctx.baseDir, file)
+
+        // 如果文件不存在，自动创建一个空文件
         if (!existsSync(filePath)) {
-            ctx.logger.warn(`dictionary file not found: ${filePath}`)
-            continue
+            ctx.logger.warn(
+                `dictionary file not found: ${filePath}, creating a new one.`
+            )
+            writeFileSync(filePath, '') // 创建一个空文件
         }
 
         const source = readFileSync(filePath, 'utf8')
