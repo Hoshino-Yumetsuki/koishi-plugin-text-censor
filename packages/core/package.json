@@ -33,8 +33,7 @@
       ]
     },
     "description": {
-      "en": "Filter out sensitive words in text messages",
-      "zh": "文本敏感词过滤"
+      "zh": "文本敏感词过滤服务，支持多敏感词库"
     }
   },
   "peerDependencies": {
