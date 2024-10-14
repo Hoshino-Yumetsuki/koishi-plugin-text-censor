@@ -8,12 +8,14 @@ export const name = 'text-censor'
 
 export interface Config {
   filename: string
-  removeWords: boolean // 新增配置项，决定是否删除敏感词
+  removeWords: boolean // 是否直接删除敏感词
+  transformToUpper: boolean // 新增配置项，决定是否将字符转换为大写
 }
 
 export const Config: Schema<Config> = Schema.object({
   filename: Schema.string().description('存储敏感词的文件路径。').default('data/censor.txt'),
   removeWords: Schema.boolean().description('是否直接删除敏感词。').default(false), // 默认不删除敏感词
+  transformToUpper: Schema.boolean().description('是否将字符转换为大写。').default(false), // 默认不转换字符为大写
 })
 
 export function apply(ctx: Context, config: Config) {
@@ -28,9 +30,12 @@ export function apply(ctx: Context, config: Config) {
     .split('\n')
     .map(word => word.trim())
     .filter(word => word && !word.startsWith('//') && !word.startsWith('#'))
-  
+
+  // 根据配置决定是否转换为大写
+  const mintOptions = config.transformToUpper ? { transform: 'capital' } : {}
+
   // 创建敏感词过滤器
-  const filter = new Mint(words, { transform: 'capital' })
+  const filter = new Mint(words, mintOptions)
 
   // 注册 Censor 插件
   ctx.plugin(Censor)
