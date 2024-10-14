@@ -9,7 +9,7 @@ export const name = 'text-censor'
 export interface Config {
     textDatabase: [string][]
     removeWords: boolean // 是否直接删除敏感词
-    transformToUpper: boolean // 是否将字符转换为大写
+    caseStrategy: 'capital' | 'none' | 'lower' // 处理大小写的策略
 }
 
 export const Config: Schema<Config> = Schema.intersect([
@@ -26,9 +26,9 @@ export const Config: Schema<Config> = Schema.intersect([
         removeWords: Schema.boolean()
             .description('是否直接删除敏感词。')
             .default(false),
-        transformToUpper: Schema.boolean()
-            .description('是否将字符转换为大写。')
-            .default(false)
+        caseStrategy: Schema.union(['none', 'lower', 'capital'])
+            .description('敏感词处理时的大小写策略。')
+            .default('none') // 默认不处理大小写
     })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ]) as any
@@ -70,8 +70,9 @@ export function apply(ctx: Context, config: Config) {
         return
     }
 
+    // 使用新的大小写策略
     const mintOptions = {
-        transform: config.transformToUpper ? 'capital' : 'none'
+        transform: config.caseStrategy
     } as const
 
     const filter = new Mint(words, mintOptions)
