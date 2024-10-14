@@ -20,7 +20,7 @@ export const Config: Schema<Config> = Schema.intersect([
             ])
         )
             .description('敏感词库的文件路径。')
-            .default([['', 'data/text-censor/censor.txt']])
+            .default([['data/text-censor/censor.txt']])
     }),
     Schema.object({
         removeWords: Schema.boolean()
