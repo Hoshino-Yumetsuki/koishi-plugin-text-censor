@@ -1,5 +1,5 @@
 {
-  "name": "koishi-plugin-text-censor",
+  "name": "@q78kg/koishi-plugin-text-censor",
   "description": "A text censor provider for Koishi",
   "version": "1.0.2",
   "main": "lib/index.js",
