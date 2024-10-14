@@ -1,8 +1,9 @@
+
 import { Context, Schema } from 'koishi'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import Censor from '@koishijs/censor'
-import Mint from 'mint-filter' // 不再导入 OptionsType
+import Mint from 'mint-filter'
 
 export const name = 'text-censor'
 
@@ -33,8 +34,8 @@ export function apply(ctx: Context, config: Config) {
 
   // 根据配置决定是否转换为大写
   const mintOptions = {
-    transform: config.transformToUpper ? 'capital' : 'none', // 指定为 'none' 而不是 undefined
-  }
+    transform: config.transformToUpper ? 'capital' : 'none', // 这里我们将值设置为可能的类型
+  } as const;
 
   // 创建敏感词过滤器
   const filter = new Mint(words, mintOptions)
