@@ -1,12 +1,13 @@
 lib
 dist
-temp
+external
+
+.yarn
 
 node_modules
 npm-debug.log
 yarn-debug.log
 yarn-error.log
-tsconfig.temp.json
 tsconfig.tsbuildinfo
 
 .eslintcache
@@ -17,3 +18,13 @@ tsconfig.tsbuildinfo
 *.ntvs*
 *.njsproj
 *.sln
+
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+
+# use yakumo!!!
+yarn.lock
+package-lock.json
+.pnp.js
