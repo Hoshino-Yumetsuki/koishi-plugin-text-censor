@@ -17,11 +17,11 @@ export const Config: Schema<Config> = Schema.intersect([
         textDatabase: Schema.array(
             Schema.tuple([
                 Schema.string().role('text'),
-                Schema.string().default('data/Censor.txt')
+                Schema.string().default('data/text-censor/censor.txt')
             ])
         )
             .description('敏感词库的文件路径。')
-            .default([['', 'data/Censor.txt']])
+            .default([['', 'data/text-censor/censor.txt']])
     }),
     Schema.object({
         removeWords: Schema.boolean()
@@ -65,16 +65,16 @@ export function apply(ctx: Context, config: Config) {
     }
 
     // 根据配置决定是否转换为大写
-    const MintOptions = {
+    const mintOptions = {
         transform: config.transformToUpper ? 'capital' : 'none' // 这里我们将值设置为可能的类型
     } as const
 
     // 创建敏感词过滤器
-    const filter = new Mint(words, MintOptions)
+    const filter = new Mint(words, mintOptions)
 
     // 注册 Censor 插件
     ctx.plugin(Censor)
-    ctx.get('Censor').intercept({
+    ctx.get('censor').intercept({
         async text(attrs) {
             const originalText = attrs.content // 获取原始文本
             const result = await filter.filter(originalText) // 处理文本以过滤敏感词
