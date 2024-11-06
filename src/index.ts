@@ -83,7 +83,31 @@ export function apply(ctx: Context, config: Config) {
             if (typeof result.text !== 'string') return []
 
             if (config.removeWords) {
-                const cleanedText = result.text.replace(/\*/g, '')
+                let cleanedText = originalText
+                let lastIndex = 0
+
+                for (let i = 0; i < result.text.length; i++) {
+                    if (result.text[i] === '*') {
+                        let asteriskCount = 0
+                        while (
+                            i + asteriskCount < result.text.length &&
+                            result.text[i + asteriskCount] === '*'
+                        ) {
+                            asteriskCount++
+                        }
+
+                        const beforePart = cleanedText.slice(0, lastIndex)
+                        const afterPart = cleanedText.slice(
+                            lastIndex + asteriskCount
+                        )
+                        cleanedText = beforePart + afterPart
+
+                        i += asteriskCount - 1
+                    } else {
+                        lastIndex++
+                    }
+                }
+
                 return [cleanedText.trim()]
             } else {
                 return [result.text]
