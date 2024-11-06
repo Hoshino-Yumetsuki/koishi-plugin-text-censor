@@ -8,8 +8,8 @@ export const name = 'text-censor'
 
 export interface Config {
     textDatabase: [string][]
-    removeWords: boolean // 是否直接删除敏感词
-    caseStrategy: 'capital' | 'none' | 'lower' // 处理大小写的策略
+    removeWords: boolean
+    caseStrategy: 'capital' | 'none' | 'lower'
 }
 
 export const Config: Schema<Config> = Schema.intersect([
@@ -28,9 +28,8 @@ export const Config: Schema<Config> = Schema.intersect([
             .default(false),
         caseStrategy: Schema.union(['none', 'lower', 'capital'])
             .description('敏感词处理时的大小写策略。')
-            .default('none') // 默认不处理大小写
+            .default('none')
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ]) as any
 
 export function apply(ctx: Context, config: Config) {
@@ -39,7 +38,6 @@ export function apply(ctx: Context, config: Config) {
     for (const [file] of config.textDatabase) {
         const filePath = resolve(ctx.baseDir, file)
 
-        // 如果文件不存在，确保目录存在，然后创建文件
         if (!existsSync(filePath)) {
             ctx.logger.warn(
                 `dictionary file not found: ${filePath}, creating a new one.`
@@ -47,10 +45,10 @@ export function apply(ctx: Context, config: Config) {
 
             const dirPath = dirname(filePath)
             if (!existsSync(dirPath)) {
-                mkdirSync(dirPath, { recursive: true }) // 递归创建目录
+                mkdirSync(dirPath, { recursive: true })
             }
 
-            writeFileSync(filePath, '') // 创建一个空文件
+            writeFileSync(filePath, '')
         }
 
         const source = readFileSync(filePath, 'utf8')
@@ -70,7 +68,6 @@ export function apply(ctx: Context, config: Config) {
         return
     }
 
-    // 使用新的大小写策略
     const mintOptions = {
         transform: config.caseStrategy
     } as const

@@ -194,7 +194,9 @@ export default [
                 }
             ],
 
-            '@typescript-eslint/type-annotation-spacing': 'error'
+            '@typescript-eslint/type-annotation-spacing': 'error',
+
+            '@typescript-eslint/no-explicit-any': 'off'
         }
     }
 ]
