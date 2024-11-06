@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/Hoshino-Yumetsuki/koishi-plugin-text-censor/issues"
   },
-  "homepage": "https://censor.koishi.chat/plugins/text.html",
+  "homepage": "https://github.com/Hoshino-Yumetsuki/koishi-plugin-text-censor",
   "keywords": [
     "bot",
     "chatbot",
