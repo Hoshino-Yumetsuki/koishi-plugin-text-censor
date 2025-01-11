@@ -1,7 +1,7 @@
 {
   "name": "@q78kg/koishi-plugin-text-censor",
   "description": "A text censor provider for Koishi",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "main": "lib/index.js",
   "files": [
     "lib"
