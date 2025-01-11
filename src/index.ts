@@ -10,6 +10,7 @@ export interface Config {
     textDatabase: [string][]
     removeWords: boolean
     caseStrategy: 'capital' | 'none' | 'lower'
+    regexPatterns: string[]
 }
 
 export const Config: Schema<Config> = Schema.intersect([
@@ -19,15 +20,18 @@ export const Config: Schema<Config> = Schema.intersect([
                 Schema.string().default('data/text-censor/censor.txt')
             ])
         )
-            .description('敏感词库的文件路径。')
-            .default([['data/text-censor/censor.txt']])
+            .description('敏感词库的文件路径')
+            .default([['data/text-censor/censor.txt']]),
+        regexPatterns: Schema.array(Schema.string())
+            .description('正则表达式匹配模式列表')
+            .default([])
     }),
     Schema.object({
         removeWords: Schema.boolean()
-            .description('是否直接删除敏感词。')
+            .description('是否直接删除敏感词')
             .default(false),
         caseStrategy: Schema.union(['none', 'lower', 'capital'])
-            .description('敏感词处理时的大小写策略。')
+            .description('敏感词处理时的大小写策略')
             .default('none')
     })
 ]) as any
@@ -77,13 +81,31 @@ export function apply(ctx: Context, config: Config) {
     ctx.plugin(Censor)
     ctx.get('censor').intercept({
         async text(attrs) {
-            const originalText = attrs.content
-            const result = await filter.filter(originalText)
+            let processedText = attrs.content
+
+            // 处理正则表达式匹配
+            for (const pattern of config.regexPatterns) {
+                try {
+                    const regex = new RegExp(pattern, 'gs')
+                    if (config.removeWords) {
+                        processedText = processedText.replace(regex, '')
+                    } else {
+                        processedText = processedText.replace(regex, (match) =>
+                            '*'.repeat(match.length)
+                        )
+                    }
+                } catch (e) {
+                    ctx.logger.warn(`Invalid regex pattern: ${pattern}`)
+                }
+            }
+
+            // 处理敏感词库匹配
+            const result = await filter.filter(processedText)
 
             if (typeof result.text !== 'string') return []
 
             if (config.removeWords) {
-                let cleanedText = originalText
+                let cleanedText = processedText
                 let lastIndex = 0
 
                 for (let i = 0; i < result.text.length; i++) {
