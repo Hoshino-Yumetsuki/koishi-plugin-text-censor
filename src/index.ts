@@ -82,20 +82,48 @@ export function apply(ctx: Context, config: Config) {
     ctx.get('censor').intercept({
         async text(attrs) {
             let processedText = attrs.content
+            let matches: { start: number; end: number }[] = []
 
-            // 处理正则表达式匹配
+            // 收集所有正则表达式的匹配结果
             for (const pattern of config.regexPatterns) {
                 try {
                     const regex = new RegExp(pattern, 'gs')
-                    if (config.removeWords) {
-                        processedText = processedText.replace(regex, '')
-                    } else {
-                        processedText = processedText.replace(regex, (match) =>
-                            '*'.repeat(match.length)
-                        )
+                    let match
+                    while ((match = regex.exec(processedText)) !== null) {
+                        matches.push({
+                            start: match.index,
+                            end: match.index + match[0].length
+                        })
                     }
                 } catch (e) {
                     ctx.logger.warn(`Invalid regex pattern: ${pattern}`)
+                }
+            }
+
+            // 按位置排序并合并重叠区间
+            matches.sort((a, b) => a.start - b.start)
+            const mergedMatches: { start: number; end: number }[] = []
+            for (const match of matches) {
+                if (mergedMatches.length === 0 || mergedMatches[mergedMatches.length - 1].end < match.start) {
+                    mergedMatches.push(match)
+                } else {
+                    mergedMatches[mergedMatches.length - 1].end = Math.max(
+                        mergedMatches[mergedMatches.length - 1].end,
+                        match.end
+                    )
+                }
+            }
+
+            // 从后向前处理文本，避免位置变化
+            for (let i = mergedMatches.length - 1; i >= 0; i--) {
+                const { start, end } = mergedMatches[i]
+                const matchedText = processedText.slice(start, end)
+                if (config.removeWords) {
+                    // 删除匹配到的内容
+                    processedText = processedText.slice(0, start) + processedText.slice(end)
+                } else {
+                    // 用星号替换
+                    processedText = processedText.slice(0, start) + '*'.repeat(matchedText.length) + processedText.slice(end)
                 }
             }
 
