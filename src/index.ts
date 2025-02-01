@@ -1,7 +1,7 @@
 import { Context, Schema } from 'koishi'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import Mint from 'mint-filter'
+import { createMintFilter } from '@q78kg/mint-filter'
 import Censor from '@koishijs/censor'
 
 export const name = 'text-censor'
@@ -73,10 +73,11 @@ export function apply(ctx: Context, config: Config) {
     }
 
     const mintOptions = {
-        transform: config.caseStrategy
+        transform: config.caseStrategy,
+        customCharacter: '*'
     } as const
 
-    const filter = new Mint(words, mintOptions)
+    const filter = createMintFilter(words, mintOptions)
 
     ctx.plugin(Censor)
     ctx.get('censor').intercept({
@@ -127,10 +128,12 @@ export function apply(ctx: Context, config: Config) {
                 }
             }
 
-            // 处理敏感词库匹配
-            const result = await filter.filter(processedText)
+            // 修改敏感词库匹配逻辑
+            const result = await filter.filter(processedText, {
+                replace: !config.removeWords
+            })
 
-            if (typeof result.text !== 'string') return []
+            if (!result || typeof result.text !== 'string') return []
 
             if (config.removeWords) {
                 let cleanedText = processedText

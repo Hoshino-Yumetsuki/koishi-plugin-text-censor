@@ -2,13 +2,24 @@
   "name": "@q78kg/koishi-plugin-text-censor",
   "description": "A text censor provider for Koishi",
   "version": "1.0.15",
-  "main": "lib/index.js",
+  "main": "lib/index.cjs",
+  "module": "lib/index.mjs",
+  "types": "lib/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "require": "./lib/index.cjs",
+      "import": "./lib/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "lib"
   ],
   "license": "MIT",
   "scripts": {
-    "build": "node esbuild.config.mjs",
+    "build": "kumoya build",
     "lint": "eslint src",
     "lint-fix": "eslint src --fix"
   },
@@ -55,12 +66,13 @@
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-promise": "^7.1.0",
     "koishi": "^4.17.9",
+    "kumoya": "^1.2.0",
     "prettier": "^3.3.3",
     "typescript": "^5.5.3",
     "yml-register": "^1.2.5"
   },
   "dependencies": {
     "@koishijs/censor": "^1.0.1",
-    "mint-filter": "^3.0.1"
+    "@q78kg/mint-filter": "^1.0.1"
   }
 }
