@@ -1,5 +1,6 @@
 import { Context, Schema } from 'koishi'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
+import { mkdir, writeFile, readFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { createMintFilter } from '@q78kg/mint-filter'
 import Censor from '@koishijs/censor'
@@ -7,9 +8,9 @@ import Censor from '@koishijs/censor'
 export const name = 'text-censor'
 
 export interface Config {
-    textDatabase: [string][]
+    textDatabase: readonly [string][]
     removeWords: boolean
-    regexPatterns: string[]
+    regexPatterns: readonly string[]
 }
 
 export const Config: Schema<Config> = Schema.intersect([
@@ -33,97 +34,112 @@ export const Config: Schema<Config> = Schema.intersect([
 ]) as any
 
 export function apply(ctx: Context, config: Config) {
-    let words: string[] = []
+    const wordSet = new Set<string>()
 
-    for (const [file] of config.textDatabase) {
-        const filePath = resolve(ctx.baseDir, file)
+    const loadDictionaries = async (): Promise<void> => {
+        await Promise.all(
+            config.textDatabase.map(async ([file]) => {
+                const filePath = resolve(ctx.baseDir, file)
 
-        if (!existsSync(filePath)) {
-            ctx.logger.warn(
-                `dictionary file not found: ${filePath}, creating a new one.`
-            )
+                try {
+                    if (!existsSync(filePath)) {
+                        ctx.logger.warn(
+                            `dictionary file not found: ${filePath}, creating a new one.`
+                        )
+                        await mkdir(dirname(filePath), { recursive: true })
+                        await writeFile(filePath, '')
+                    }
 
-            const dirPath = dirname(filePath)
-            if (!existsSync(dirPath)) {
-                mkdirSync(dirPath, { recursive: true })
-            }
+                    const source = await readFile(filePath, 'utf8')
+                    const fileWords = source
+                        .split('\n')
+                        .map((word) => word.trim())
+                        .filter((word) => word && !/^[/#]/.test(word))
 
-            writeFileSync(filePath, '')
-        }
-
-        const source = readFileSync(filePath, 'utf8')
-        const fileWords = source
-            .split('\n')
-            .map((word) => word.trim())
-            .filter(
-                (word) =>
-                    word && !word.startsWith('//') && !word.startsWith('#')
-            )
-
-        words = words.concat(fileWords)
+                    fileWords.forEach((word) => wordSet.add(word))
+                } catch (error) {
+                    ctx.logger.error(
+                        `Error loading dictionary ${filePath}:`,
+                        error
+                    )
+                }
+            })
+        )
     }
 
-    const filter =
-        words.length > 0
-            ? createMintFilter(words, {
-                  customCharacter: '*'
-              } as const)
-            : null
+    const regexPatterns = config.regexPatterns
+        .map((pattern) => {
+            try {
+                return new RegExp(pattern, 'gs')
+            } catch (e) {
+                ctx.logger.warn(
+                    `Invalid regex pattern: ${pattern}, error: ${e.message}`
+                )
+                return null
+            }
+        })
+        .filter((regex): regex is RegExp => regex !== null)
+
+    const processedCache = new Map<string, string>()
+
+    const processText = (text: string): string => {
+        if (processedCache.has(text)) {
+            return processedCache.get(text)!
+        }
+
+        let processedText = text
+        const matches: Array<{ start: number; end: number }> = []
+
+        for (const regex of regexPatterns) {
+            for (const match of processedText.matchAll(regex)) {
+                matches.push({
+                    start: match.index!,
+                    end: match.index! + match[0].length
+                })
+            }
+        }
+
+        if (matches.length > 0) {
+            matches.sort((a, b) => a.start - b.start)
+            const mergedMatches = matches.reduce<
+                Array<{ start: number; end: number }>
+            >((acc, curr) => {
+                const last = acc[acc.length - 1]
+                if (!last || last.end < curr.start) {
+                    acc.push(curr)
+                } else {
+                    last.end = Math.max(last.end, curr.end)
+                }
+                return acc
+            }, [])
+
+            const parts: string[] = []
+            let lastIndex = 0
+
+            for (const { start, end } of mergedMatches) {
+                parts.push(processedText.slice(lastIndex, start))
+                parts.push(config.removeWords ? '' : '*'.repeat(end - start))
+                lastIndex = end
+            }
+            parts.push(processedText.slice(lastIndex))
+
+            processedText = parts.join('')
+        }
+
+        processedCache.set(text, processedText)
+        return processedText
+    }
 
     ctx.plugin(Censor)
     ctx.get('censor').intercept({
         async text(attrs) {
-            let processedText = attrs.content
-            const matches: { start: number; end: number }[] = []
+            let processedText = processText(attrs.content)
 
-            for (const pattern of config.regexPatterns) {
-                try {
-                    const regex = new RegExp(pattern, 'gs')
-                    let match
-                    while ((match = regex.exec(processedText)) !== null) {
-                        matches.push({
-                            start: match.index,
-                            end: match.index + match[0].length
-                        })
-                    }
-                } catch (e) {
-                    ctx.logger.warn(
-                        `Invalid regex pattern: ${pattern}, error: ${e.message}`
-                    )
-                }
-            }
+            if (wordSet.size > 0) {
+                const filter = createMintFilter([...wordSet], {
+                    customCharacter: '*'
+                } as const)
 
-            matches.sort((a, b) => a.start - b.start)
-            const mergedMatches: { start: number; end: number }[] = []
-            for (const match of matches) {
-                if (
-                    mergedMatches.length === 0 ||
-                    mergedMatches[mergedMatches.length - 1].end < match.start
-                ) {
-                    mergedMatches.push(match)
-                } else {
-                    mergedMatches[mergedMatches.length - 1].end = Math.max(
-                        mergedMatches[mergedMatches.length - 1].end,
-                        match.end
-                    )
-                }
-            }
-
-            for (let i = mergedMatches.length - 1; i >= 0; i--) {
-                const { start, end } = mergedMatches[i]
-                const matchedText = processedText.slice(start, end)
-                if (config.removeWords) {
-                    processedText =
-                        processedText.slice(0, start) + processedText.slice(end)
-                } else {
-                    processedText =
-                        processedText.slice(0, start) +
-                        '*'.repeat(matchedText.length) +
-                        processedText.slice(end)
-                }
-            }
-
-            if (filter) {
                 const result = filter.filter(processedText, {
                     replace: !config.removeWords
                 })
@@ -131,38 +147,17 @@ export function apply(ctx: Context, config: Config) {
                 if (!result || typeof result.text !== 'string') return []
 
                 if (config.removeWords) {
-                    let cleanedText = processedText
-                    let lastIndex = 0
-
-                    for (let i = 0; i < result.text.length; i++) {
-                        if (result.text[i] === '*') {
-                            let asteriskCount = 0
-                            while (
-                                i + asteriskCount < result.text.length &&
-                                result.text[i + asteriskCount] === '*'
-                            ) {
-                                asteriskCount++
-                            }
-
-                            const beforePart = cleanedText.slice(0, lastIndex)
-                            const afterPart = cleanedText.slice(
-                                lastIndex + asteriskCount
-                            )
-                            cleanedText = beforePart + afterPart
-
-                            i += asteriskCount - 1
-                        } else {
-                            lastIndex++
-                        }
-                    }
-
-                    return [cleanedText.trim()]
-                } else {
-                    return [result.text]
+                    processedText = result.text
+                        .split('')
+                        .filter((char) => char !== '*')
+                        .join('')
                 }
+                return [processedText.trim()]
             }
 
             return [processedText]
         }
     })
+
+    loadDictionaries()
 }
