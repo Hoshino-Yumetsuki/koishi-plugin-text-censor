@@ -8,9 +8,9 @@ import Censor from '@koishijs/censor'
 export const name = 'text-censor'
 
 export interface Config {
-    textDatabase: readonly [string][]
+    textDatabase: [string][]
     removeWords: boolean
-    regexPatterns: readonly string[]
+    regexPatterns: string[]
 }
 
 export const Config: Schema<Config> = Schema.intersect([
