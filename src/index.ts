@@ -8,22 +8,20 @@ import Censor from '@koishijs/censor'
 export const name = 'text-censor'
 
 export interface Config {
-    textDatabase: [string][]
+    textDatabase: string[]
     removeWords: boolean
     regexPatterns: string[]
 }
 
 export const Config: Schema<Config> = Schema.intersect([
     Schema.object({
-        textDatabase: Schema.array(
-            Schema.tuple([
-                Schema.string().default('data/text-censor/censor.txt')
-            ])
-        )
+        textDatabase: Schema.array(Schema.string())
             .description('敏感词库的文件路径')
-            .default([['data/text-censor/censor.txt']]),
+            .default(['data/text-censor/censor.txt']),
         regexPatterns: Schema.array(Schema.string())
-            .description('正则表达式匹配模式列表')
+            .description(
+                '正则表达式匹配模式列表（输入的正则表达式不要携带修饰符）'
+            )
             .default([])
     }),
     Schema.object({
@@ -38,7 +36,7 @@ export function apply(ctx: Context, config: Config) {
 
     const loadDictionaries = async (): Promise<void> => {
         await Promise.all(
-            config.textDatabase.map(async ([file]) => {
+            config.textDatabase.map(async (file) => {
                 const filePath = resolve(ctx.baseDir, file)
 
                 try {
@@ -70,7 +68,7 @@ export function apply(ctx: Context, config: Config) {
     const regexPatterns = config.regexPatterns
         .map((pattern) => {
             try {
-                return new RegExp(pattern, 'gs')
+                return new RegExp(String.raw`${pattern}`, 'gs')
             } catch (e) {
                 ctx.logger.warn(
                     `Invalid regex pattern: ${pattern}, error: ${e.message}`
