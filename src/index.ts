@@ -128,7 +128,7 @@ export function apply(ctx: Context, config: Config) {
         return processedText
     }
 
-    ctx.plugin(Censor)
+    ctx.plugin(Censor["default"] ?? Censor)
     ctx.get('censor').intercept({
         async text(attrs) {
             let processedText = processText(attrs.content)
