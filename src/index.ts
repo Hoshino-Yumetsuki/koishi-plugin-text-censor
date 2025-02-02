@@ -83,7 +83,7 @@ export function apply(ctx: Context, config: Config) {
     ctx.get('censor').intercept({
         async text(attrs) {
             let processedText = attrs.content
-            let matches: { start: number; end: number }[] = []
+            const matches: { start: number; end: number }[] = []
 
             // 收集所有正则表达式的匹配结果
             for (const pattern of config.regexPatterns) {
@@ -97,7 +97,9 @@ export function apply(ctx: Context, config: Config) {
                         })
                     }
                 } catch (e) {
-                    ctx.logger.warn(`Invalid regex pattern: ${pattern}`)
+                    ctx.logger.warn(
+                        `Invalid regex pattern: ${pattern}, error: ${e.message}`
+                    )
                 }
             }
 
@@ -105,7 +107,10 @@ export function apply(ctx: Context, config: Config) {
             matches.sort((a, b) => a.start - b.start)
             const mergedMatches: { start: number; end: number }[] = []
             for (const match of matches) {
-                if (mergedMatches.length === 0 || mergedMatches[mergedMatches.length - 1].end < match.start) {
+                if (
+                    mergedMatches.length === 0 ||
+                    mergedMatches[mergedMatches.length - 1].end < match.start
+                ) {
                     mergedMatches.push(match)
                 } else {
                     mergedMatches[mergedMatches.length - 1].end = Math.max(
@@ -121,10 +126,14 @@ export function apply(ctx: Context, config: Config) {
                 const matchedText = processedText.slice(start, end)
                 if (config.removeWords) {
                     // 删除匹配到的内容
-                    processedText = processedText.slice(0, start) + processedText.slice(end)
+                    processedText =
+                        processedText.slice(0, start) + processedText.slice(end)
                 } else {
                     // 用星号替换
-                    processedText = processedText.slice(0, start) + '*'.repeat(matchedText.length) + processedText.slice(end)
+                    processedText =
+                        processedText.slice(0, start) +
+                        '*'.repeat(matchedText.length) +
+                        processedText.slice(end)
                 }
             }
 
