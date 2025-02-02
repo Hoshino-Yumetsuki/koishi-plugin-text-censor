@@ -19,9 +19,7 @@ export const Config: Schema<Config> = Schema.intersect([
             .description('敏感词库的文件路径')
             .default(['data/text-censor/censor.txt']),
         regexPatterns: Schema.array(Schema.string())
-            .description(
-                '正则表达式匹配模式列表（输入的正则表达式不要携带修饰符）'
-            )
+            .description('正则表达式匹配模式列表')
             .default([])
     }),
     Schema.object({
@@ -68,7 +66,13 @@ export function apply(ctx: Context, config: Config) {
     const regexPatterns = config.regexPatterns
         .map((pattern) => {
             try {
-                return new RegExp(String.raw`${pattern}`, 'gs')
+                const lastSlash = pattern.lastIndexOf('/')
+                if (pattern.startsWith('/') && lastSlash > 0) {
+                    const flags = pattern.slice(lastSlash + 1)
+                    const actualPattern = pattern.slice(1, lastSlash)
+                    return new RegExp(actualPattern, flags)
+                }
+                return new RegExp(pattern, 'gs')
             } catch (e) {
                 ctx.logger.warn(
                     `Invalid regex pattern: ${pattern}, error: ${e.message}`
@@ -128,6 +132,7 @@ export function apply(ctx: Context, config: Config) {
         return processedText
     }
 
+    // eslint-disable-next-line
     ctx.plugin(Censor["default"] ?? Censor)
     ctx.get('censor').intercept({
         async text(attrs) {
@@ -150,10 +155,8 @@ export function apply(ctx: Context, config: Config) {
                         .filter((char) => char !== '*')
                         .join('')
                 }
-                return [processedText.trim()]
             }
-
-            return [processedText]
+            return [processedText.trim()]
         }
     })
 
