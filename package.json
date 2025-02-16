@@ -19,7 +19,8 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "kumoya build",
+    "build": "node esbuild.config.mjs && tsc --emitDeclarationOnly && rollup -c rollup.config.mjs",
+    "publish": "yarn npm publish",
     "lint": "eslint src",
     "lint-fix": "eslint src --fix"
   },
@@ -67,8 +68,10 @@
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-promise": "^7.1.0",
     "koishi": "^4.17.9",
-    "kumoya": "^1.6.1",
     "prettier": "^3.3.3",
+    "rollup": "^4.28.1",
+    "rollup-plugin-delete": "^2.1.0",
+    "rollup-plugin-dts": "^6.1.1",
     "typescript": "^5.5.3",
     "yml-register": "^1.2.5"
   },
